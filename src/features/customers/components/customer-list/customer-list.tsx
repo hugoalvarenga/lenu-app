@@ -1,7 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Users, MoreVertical, Pencil, Trash2, Mail, Phone, MapPin } from "lucide-react";
+import Link from "next/link";
+import {
+  Plus,
+  Users,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Mail,
+  Phone,
+  MapPin,
+  BarChart3,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   Button,
@@ -10,6 +21,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui";
 import { cn } from "@/shared/lib/utils";
@@ -124,6 +136,13 @@ export function CustomerList({ customers }: CustomerListProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link href={`/customers/${customer.id}`}>
+                          <BarChart3 className="mr-2 h-4 w-4" />
+                          Ver histórico
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleEdit(customer)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Editar

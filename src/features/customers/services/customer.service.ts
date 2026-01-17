@@ -57,3 +57,5 @@ export async function getCustomersCount(): Promise<number> {
 
   return count || 0;
 }
+
+export const getCustomerById = getCustomer;
