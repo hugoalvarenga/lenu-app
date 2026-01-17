@@ -29,30 +29,25 @@ export default async function DashboardPage() {
 
   const stats = [
     {
-      title: "Total de Livros",
+      title: "Livros Cadastrados",
       value: booksStats.total,
-      subtitle: `${booksStats.available} disponíveis`,
       icon: BookCopy,
-      trend: booksStats.available > 0 ? "positive" : "neutral",
     },
     {
       title: "Clientes",
       value: customersCount,
       icon: Users,
-      trend: "neutral" as const,
     },
     {
       title: "Aluguéis Ativos",
       value: rentalsStats.active,
-      subtitle: `${rentalsStats.total} no total`,
+      subtitle: `${rentalsStats.completed} devolvidos`,
       icon: Clock,
-      trend: "neutral" as const,
     },
     {
       title: "Em Atraso",
       value: rentalsStats.overdue,
       icon: AlertTriangle,
-      trend: rentalsStats.overdue > 0 ? ("negative" as const) : ("positive" as const),
       highlight: rentalsStats.overdue > 0,
     },
   ];

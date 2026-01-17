@@ -85,6 +85,7 @@ export async function getOverdueRentals(): Promise<RentalWithRelations[]> {
 export async function getRentalsCount(): Promise<{
   total: number;
   active: number;
+  completed: number;
   overdue: number;
 }> {
   const supabase = await createClient();
@@ -99,6 +100,11 @@ export async function getRentalsCount(): Promise<{
     .select("*", { count: "exact", head: true })
     .eq("status", "active");
 
+  const { count: completed } = await supabase
+    .from("rentals")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "returned");
+
   const { count: overdue } = await supabase
     .from("rentals")
     .select("*", { count: "exact", head: true })
@@ -108,6 +114,7 @@ export async function getRentalsCount(): Promise<{
   return {
     total: total || 0,
     active: active || 0,
+    completed: completed || 0,
     overdue: overdue || 0,
   };
 }
