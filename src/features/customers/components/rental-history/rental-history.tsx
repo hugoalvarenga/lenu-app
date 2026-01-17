@@ -3,20 +3,8 @@
 import { format, parseISO, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Image from "next/image";
-import { BookOpen } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/components/ui";
+import { BookOpen, Calendar, ArrowRight } from "lucide-react";
+import { Badge } from "@/shared/components/ui";
 import { cn } from "@/shared/lib/utils";
 import type { RentalHistory as RentalHistoryType } from "../../services/customer-analytics.service";
 
@@ -27,19 +15,20 @@ interface RentalHistoryProps {
 const statusConfig = {
   active: {
     label: "Ativo",
-    className: "border-amber-500/50 bg-amber-500/10 text-amber-500",
+    className: "bg-amber-500/10 text-amber-600 dark:text-amber-500 border-0",
   },
   completed: {
     label: "Devolvido",
-    className: "border-emerald-500/50 bg-emerald-500/10 text-emerald-500",
+    className:
+      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-0",
   },
   cancelled: {
     label: "Cancelado",
-    className: "border-gray-500/50 bg-gray-500/10 text-gray-500",
+    className: "bg-muted text-muted-foreground border-0",
   },
   overdue: {
     label: "Em Atraso",
-    className: "border-red-500/50 bg-red-500/10 text-red-500",
+    className: "bg-red-500/10 text-red-600 dark:text-red-500 border-0",
   },
 };
 
@@ -56,154 +45,96 @@ export function RentalHistory({ rentals }: RentalHistoryProps) {
 
   if (rentals.length === 0) {
     return (
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-lg">Histórico de Aluguéis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <BookOpen className="mb-4 h-12 w-12 text-muted-foreground/30" />
-            <p className="text-muted-foreground">
-              Este cliente ainda não realizou nenhum aluguel
-            </p>
+      <div className="rounded-xl border border-border/50 bg-card">
+        <div className="border-b border-border/50 px-6 py-4">
+          <h3 className="font-semibold">Histórico de Aluguéis</h3>
+        </div>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <BookOpen className="h-6 w-6 text-muted-foreground" />
           </div>
-        </CardContent>
-      </Card>
+          <p className="text-sm text-muted-foreground">
+            Este cliente ainda não realizou nenhum aluguel
+          </p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="border-border/50">
-      <CardHeader>
-        <CardTitle className="text-lg">Histórico de Aluguéis</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0 md:p-6 md:pt-0">
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Livro</TableHead>
-                <TableHead>Início</TableHead>
-                <TableHead>Devolução</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rentals.map((rental) => {
-                const displayStatus = getDisplayStatus(rental);
-                const status = statusConfig[displayStatus];
+    <div className="rounded-xl border border-border/50 bg-card">
+      <div className="border-b border-border/50 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">Histórico de Aluguéis</h3>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {rentals.length} {rentals.length === 1 ? "registro" : "registros"}
+          </span>
+        </div>
+      </div>
 
-                return (
-                  <TableRow key={rental.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-12 w-9 overflow-hidden rounded bg-muted">
-                          {rental.book.cover_url ? (
-                            <Image
-                              src={rental.book.cover_url}
-                              alt={rental.book.title}
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center">
-                              <BookOpen className="h-4 w-4 text-muted-foreground/50" />
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium">{rental.book.title}</p>
-                          {rental.book.author && (
-                            <p className="text-sm text-muted-foreground">
-                              {rental.book.author}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {format(parseISO(rental.start_date), "dd/MM/yyyy", {
+      <div className="divide-y divide-border/50">
+        {rentals.map((rental) => {
+          const displayStatus = getDisplayStatus(rental);
+          const status = statusConfig[displayStatus];
+
+          return (
+            <div
+              key={rental.id}
+              className="group flex items-center gap-4 px-6 py-4 transition-colors hover:bg-muted/30"
+            >
+              <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded-md bg-muted">
+                {rental.book.cover_url ? (
+                  <Image
+                    src={rental.book.cover_url}
+                    alt={rental.book.title}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <BookOpen className="h-4 w-4 text-muted-foreground/50" />
+                  </div>
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium leading-tight">
+                  {rental.book.title}
+                </p>
+                {rental.book.author && (
+                  <p className="truncate text-sm text-muted-foreground">
+                    {rental.book.author}
+                  </p>
+                )}
+              </div>
+
+              <div className="hidden items-center gap-2 text-xs text-muted-foreground md:flex">
+                <Calendar className="h-3.5 w-3.5" />
+                <span className="tabular-nums">
+                  {format(parseISO(rental.start_date), "dd MMM", {
+                    locale: ptBR,
+                  })}
+                </span>
+                <ArrowRight className="h-3 w-3" />
+                <span className="tabular-nums">
+                  {rental.actual_return_date
+                    ? format(parseISO(rental.actual_return_date), "dd MMM", {
+                        locale: ptBR,
+                      })
+                    : format(parseISO(rental.expected_return_date), "dd MMM", {
                         locale: ptBR,
                       })}
-                    </TableCell>
-                    <TableCell>
-                      {rental.actual_return_date
-                        ? format(
-                            parseISO(rental.actual_return_date),
-                            "dd/MM/yyyy",
-                            { locale: ptBR }
-                          )
-                        : format(
-                            parseISO(rental.expected_return_date),
-                            "dd/MM/yyyy",
-                            { locale: ptBR }
-                          )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn("border", status.className)}
-                      >
-                        {status.label}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="space-y-3 p-4 md:hidden">
-          {rentals.map((rental) => {
-            const displayStatus = getDisplayStatus(rental);
-            const status = statusConfig[displayStatus];
-
-            return (
-              <div
-                key={rental.id}
-                className="flex items-center gap-3 rounded-lg border border-border/50 p-3"
-              >
-                <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded bg-muted">
-                  {rental.book.cover_url ? (
-                    <Image
-                      src={rental.book.cover_url}
-                      alt={rental.book.title}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <BookOpen className="h-5 w-5 text-muted-foreground/50" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{rental.book.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(parseISO(rental.start_date), "dd/MM/yy")} -{" "}
-                    {rental.actual_return_date
-                      ? format(parseISO(rental.actual_return_date), "dd/MM/yy")
-                      : format(
-                          parseISO(rental.expected_return_date),
-                          "dd/MM/yy"
-                        )}
-                  </p>
-                  <Badge
-                    variant="outline"
-                    className={cn("border text-xs mt-1", status.className)}
-                  >
-                    {status.label}
-                  </Badge>
-                </div>
+                </span>
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+
+              <Badge variant="secondary" className={cn("shrink-0", status.className)}>
+                {status.label}
+              </Badge>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
-

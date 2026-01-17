@@ -176,4 +176,3 @@ export async function getCustomerTopBooks(
     .sort((a, b) => b.rental_count - a.rental_count)
     .slice(0, limit);
 }
-
