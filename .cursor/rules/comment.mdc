@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+# Não adicione comentários no código, exceto quando explicitamente solicitado. Comentários só são permitidos para documentação de funções (JSDoc/JSDoc-like). Comentários descritivos, de implementação ou explicações internas não devem ser incluídos em nenhuma hipótese, a menos que especificado na tarefa.

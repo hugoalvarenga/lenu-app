@@ -1,0 +1,1149 @@
+---
+alwaysApply: true
+---
+
+# Cursor Rules - Feature-based Architecture + REST API + Server Actions
+
+## General Architecture
+
+### Feature-based Structure
+
+- Organize code by features/domains, not by file type
+- Each feature should be self-contained and independent
+- Folder structure: `src/features/{feature-name}/`
+- Avoid circular dependencies between features
+- Components follow nested structure pattern
+
+### REST API + Services + Server Actions Integration
+
+- Use Next.js native fetch with caching capabilities
+- Implement Service Layer pattern for API communication
+- Prefer Server Actions for mutations and complex operations
+- Use React Query (TanStack Query) for client-side server state management
+- Co-locate API services with their feature consumers
+
+### Composition Pattern
+
+- Prefer composition over inheritance
+- Use Higher-Order Components (HOCs) and custom hooks
+- Implement dependency injection through composition
+- Create small and specific interfaces
+
+## Folder Structure
+
+```
+src/
+├── features/
+│   ├── auth/
+│   │   ├── components/
+│   │   │   ├── login-form/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── login-form.tsx
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── form-fields/
+│   │   │   │   │   └── submit-button/
+│   │   │   │   ├── hooks/
+│   │   │   │   ├── schemas/
+│   │   │   │   │   └── login.schema.ts
+│   │   │   │   └── types.ts
+│   │   │   └── auth-provider/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   │   ├── auth.service.ts
+│   │   │   └── index.ts
+│   │   ├── api/
+│   │   │   ├── endpoints.ts
+│   │   │   └── types.ts
+│   │   ├── server-actions/
+│   │   │   ├── login.action.ts
+│   │   │   └── index.ts
+│   │   ├── types/
+│   │   ├── utils/
+│   │   └── index.ts
+│   ├── users/
+│   │   ├── components/
+│   │   │   ├── user-list/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── user-list.tsx
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── toolbar/
+│   │   │   │   │   │   ├── index.ts
+│   │   │   │   │   │   ├── toolbar.tsx
+│   │   │   │   │   │   ├── components/
+│   │   │   │   │   │   │   ├── search-input/
+│   │   │   │   │   │   │   ├── filter-dropdown/
+│   │   │   │   │   │   │   └── actions-menu/
+│   │   │   │   │   │   └── hooks/
+│   │   │   │   │   ├── user-item/
+│   │   │   │   │   └── pagination/
+│   │   │   │   ├── hooks/
+│   │   │   │   │   └── use-user-list.ts
+│   │   │   │   └── types.ts
+│   │   ├── services/
+│   │   │   ├── user.service.ts
+│   │   │   └── index.ts
+│   │   ├── api/
+│   │   │   ├── endpoints.ts
+│   │   │   └── types.ts
+│   │   ├── server-actions/
+│   │   │   ├── create-user.action.ts
+│   │   │   ├── update-user.action.ts
+│   │   │   └── index.ts
+│   │   ├── hooks/
+│   │   │   ├── use-users.ts
+│   │   │   ├── use-user.ts
+│   │   │   └── index.ts
+│   │   ├── types/
+│   │   └── index.ts
+├── shared/
+│   ├── components/
+│   │   └── ui/           # shadcn/ui components
+│   │       ├── form.tsx
+│   │       ├── input.tsx
+│   │       ├── button.tsx
+│   │       └── ...
+│   ├── hooks/
+│   │   ├── use-fetch.ts
+│   │   └── use-mutation.ts
+│   ├── lib/
+│   │   ├── api.ts               # Fetch wrapper
+│   │   ├── query-client.ts      # React Query client
+│   │   └── api-error.ts         # Error handling
+│   ├── services/
+│   │   └── base.service.ts      # Base service class
+│   ├── types/
+│   │   ├── api.types.ts         # API response types
+│   │   └── common.types.ts
+│   ├── schemas/                  # Common zod schemas
+│   └── utils/
+│       ├── url-builder.ts
+│       └── query-keys.ts
+└── app/
+    ├── providers/
+    │   ├── query-provider.tsx
+    │   └── auth-provider.tsx
+    ├── api/                      # Next.js API Routes (if needed)
+    │   └── [...]/route.ts
+    └── config/
+        └── env.ts
+```
+
+## Code Rules
+
+### 1. Naming Conventions
+
+- **Files**: kebab-case (`user-list.tsx`, `user.service.ts`)
+- **Components**: PascalCase (`UserList`)
+- **Hooks**: camelCase starting with "use" (`useUserList`)
+- **Services**: PascalCase ending with "Service" (`UserService`)
+- **Server Actions**: camelCase ending with "Action" (`createUserAction`)
+- **API Endpoints**: SCREAMING_SNAKE_CASE for constants (`GET_USERS`, `CREATE_USER`)
+- **Types**: PascalCase (`UserData`, `ApiResponse`)
+
+### 2. Nested Component Structure
+
+- Each complex component has its own folder
+- Sub-components are nested within parent component folder
+- Co-locate related hooks, services, and types
+- Use index.ts for clean exports
+
+```typescript
+// ✅ Good - Nested structure
+// features/users/components/user-list/user-list.tsx
+const UserList = () => {
+  const { users, isLoading } = useUsers();
+
+  return (
+    <div className="user-list">
+      <Toolbar />
+      <UserGrid users={users} />
+      <Pagination />
+    </div>
+  );
+};
+
+// features/users/components/user-list/components/toolbar/toolbar.tsx
+const Toolbar = () => {
+  return (
+    <div className="toolbar">
+      <SearchInput />
+      <FilterDropdown />
+      <ActionsMenu />
+    </div>
+  );
+};
+
+// features/users/components/user-list/index.ts
+export { UserList } from "./user-list";
+export type { UserListProps } from "./types";
+```
+
+### 3. Fetch API Wrapper
+
+- Use Next.js native fetch with extended options
+- Handle authentication, errors, and caching consistently
+- Leverage Next.js cache and revalidation features
+
+```typescript
+// ✅ Good - Fetch API wrapper
+// shared/lib/api.ts
+import { ApiError } from "./api-error";
+
+type FetchOptions = RequestInit & {
+  params?: Record<string, string | number | boolean | undefined>;
+  tags?: string[];
+  revalidate?: number | false;
+};
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
+async function getAuthToken(): Promise<string | null> {
+  // Implement token retrieval logic (cookies, localStorage, etc.)
+  return null;
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new ApiError({
+      message: errorData.message || response.statusText,
+      statusCode: response.status,
+      code: errorData.code,
+      details: errorData.details,
+    });
+  }
+
+  // Handle empty responses
+  const text = await response.text();
+  if (!text) return {} as T;
+
+  return JSON.parse(text) as T;
+}
+
+function buildUrl(endpoint: string, params?: FetchOptions["params"]): string {
+  const url = new URL(endpoint, API_BASE_URL);
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.append(key, String(value));
+      }
+    });
+  }
+
+  return url.toString();
+}
+
+export async function api<T>(
+  endpoint: string,
+  options: FetchOptions = {}
+): Promise<T> {
+  const { params, tags, revalidate, ...fetchOptions } = options;
+
+  const token = await getAuthToken();
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+
+  if (token) {
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(buildUrl(endpoint, params), {
+    ...fetchOptions,
+    headers,
+    next: {
+      tags,
+      revalidate,
+    },
+  });
+
+  return handleResponse<T>(response);
+}
+
+// Convenience methods
+export const apiClient = {
+  get: <T>(endpoint: string, options?: Omit<FetchOptions, "method" | "body">) =>
+    api<T>(endpoint, { ...options, method: "GET" }),
+
+  post: <T>(
+    endpoint: string,
+    data?: unknown,
+    options?: Omit<FetchOptions, "method">
+  ) =>
+    api<T>(endpoint, {
+      ...options,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
+  put: <T>(
+    endpoint: string,
+    data?: unknown,
+    options?: Omit<FetchOptions, "method">
+  ) =>
+    api<T>(endpoint, {
+      ...options,
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
+  patch: <T>(
+    endpoint: string,
+    data?: unknown,
+    options?: Omit<FetchOptions, "method">
+  ) =>
+    api<T>(endpoint, {
+      ...options,
+      method: "PATCH",
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
+  delete: <T>(
+    endpoint: string,
+    options?: Omit<FetchOptions, "method" | "body">
+  ) => api<T>(endpoint, { ...options, method: "DELETE" }),
+};
+```
+
+### 4. Service Layer Pattern
+
+- Each feature has its own service class
+- Services encapsulate all API communication
+- Use TypeScript for strong typing
+- Extend from base service when appropriate
+
+```typescript
+// ✅ Good - Base Service
+// shared/services/base.service.ts
+import { apiClient } from "@/shared/lib/api";
+import type { PaginatedResponse, QueryParams } from "@/shared/types/api.types";
+
+export abstract class BaseService<
+  T,
+  CreateDTO = Partial<T>,
+  UpdateDTO = Partial<T>
+> {
+  constructor(protected readonly basePath: string) {}
+
+  async getAll(params?: QueryParams): Promise<PaginatedResponse<T>> {
+    return apiClient.get<PaginatedResponse<T>>(this.basePath, {
+      params: params as Record<string, string | number | boolean | undefined>,
+      tags: [this.getTag()],
+    });
+  }
+
+  async getById(id: string): Promise<T> {
+    return apiClient.get<T>(`${this.basePath}/${id}`, {
+      tags: [this.getTag(), this.getTag(id)],
+    });
+  }
+
+  async create(data: CreateDTO): Promise<T> {
+    return apiClient.post<T>(this.basePath, data);
+  }
+
+  async update(id: string, data: UpdateDTO): Promise<T> {
+    return apiClient.patch<T>(`${this.basePath}/${id}`, data);
+  }
+
+  async delete(id: string): Promise<void> {
+    return apiClient.delete(`${this.basePath}/${id}`);
+  }
+
+  protected getTag(id?: string): string {
+    const baseName = this.basePath.replace(/^\/api\//, "").replace(/\//g, "-");
+    return id ? `${baseName}-${id}` : baseName;
+  }
+}
+
+// ✅ Good - Feature Service
+// features/users/services/user.service.ts
+import { BaseService } from "@/shared/services/base.service";
+import { apiClient } from "@/shared/lib/api";
+import type { User, CreateUserDTO, UpdateUserDTO } from "../types";
+
+class UserServiceClass extends BaseService<User, CreateUserDTO, UpdateUserDTO> {
+  constructor() {
+    super("/api/users");
+  }
+
+  // Custom methods specific to users
+  async getByEmail(email: string): Promise<User | null> {
+    try {
+      return await apiClient.get<User>(`${this.basePath}/by-email/${email}`);
+    } catch {
+      return null;
+    }
+  }
+
+  async updateAvatar(id: string, file: File): Promise<User> {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const response = await fetch(`${this.basePath}/${id}/avatar`, {
+      method: "PATCH",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to upload avatar");
+    }
+
+    return response.json();
+  }
+
+  async changePassword(
+    id: string,
+    oldPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    return apiClient.post(`${this.basePath}/${id}/change-password`, {
+      oldPassword,
+      newPassword,
+    });
+  }
+}
+
+export const UserService = new UserServiceClass();
+```
+
+### 5. Server Components Data Fetching
+
+- Fetch data directly in Server Components
+- Use Next.js cache with tags for revalidation
+- Keep data fetching close to where it's used
+
+```typescript
+// ✅ Good - Data fetching in Server Components
+// features/users/services/user.service.ts (server-side usage)
+import { apiClient } from "@/shared/lib/api";
+import type { User, PaginatedResponse } from "../types";
+
+export async function getUsers(
+  params?: QueryParams
+): Promise<PaginatedResponse<User>> {
+  return apiClient.get<PaginatedResponse<User>>("/api/users", {
+    params,
+    tags: ["users"],
+    revalidate: 60, // Cache for 60 seconds
+  });
+}
+
+export async function getUser(id: string): Promise<User> {
+  return apiClient.get<User>(`/api/users/${id}`, {
+    tags: ["users", `user-${id}`],
+    revalidate: 60,
+  });
+}
+
+// ✅ Good - Server Component usage
+// app/users/page.tsx
+import { getUsers } from "@/features/users/services/user.service";
+import { UserList } from "@/features/users/components/user-list";
+
+export default async function UsersPage() {
+  const { data: users, meta } = await getUsers();
+
+  return <UserList users={users} meta={meta} />;
+}
+
+// ✅ Good - Server Component with params
+// app/users/[id]/page.tsx
+import { getUser } from "@/features/users/services/user.service";
+import { UserProfile } from "@/features/users/components/user-profile";
+import { notFound } from "next/navigation";
+
+export default async function UserPage({ params }: { params: { id: string } }) {
+  try {
+    const user = await getUser(params.id);
+    return <UserProfile user={user} />;
+  } catch {
+    notFound();
+  }
+}
+```
+
+### 6. Server Actions & Forms
+
+- **Prefer server actions** for mutations and complex operations
+- Use React Hook Form + shadcn/ui **only when server actions are not feasible**
+- Implement optimistic updates when appropriate
+- Handle errors gracefully with structured responses
+
+```typescript
+// ✅ Good - Server Action with service integration
+// features/users/server-actions/create-user.action.ts
+"use server";
+
+import { revalidateTag, revalidatePath } from "next/cache";
+import { UserService } from "../services/user.service";
+import { createUserSchema } from "../schemas/user.schema";
+import type { CreateUserDTO } from "../types";
+import type { ActionResponse } from "@/shared/types/api.types";
+
+export async function createUserAction(
+  data: CreateUserDTO
+): Promise<ActionResponse<User>> {
+  try {
+    // Validate input
+    const validated = createUserSchema.parse(data);
+
+    // Call service
+    const user = await UserService.create(validated);
+
+    // Revalidate cache
+    revalidateTag("users");
+    revalidatePath("/users");
+
+    return {
+      success: true,
+      data: user,
+      message: "User created successfully",
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        details: error.flatten().fieldErrors,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create user",
+    };
+  }
+}
+
+// ✅ Good - Server Action for update
+// features/users/server-actions/update-user.action.ts
+("use server");
+
+import { revalidateTag, revalidatePath } from "next/cache";
+import { UserService } from "../services/user.service";
+import { updateUserSchema } from "../schemas/user.schema";
+import type { UpdateUserDTO } from "../types";
+
+export async function updateUserAction(
+  id: string,
+  data: UpdateUserDTO
+): Promise<ActionResponse<User>> {
+  try {
+    const validated = updateUserSchema.parse(data);
+    const user = await UserService.update(id, validated);
+
+    revalidateTag("users");
+    revalidateTag(`user-${id}`);
+    revalidatePath(`/users/${id}`);
+
+    return { success: true, data: user };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update user",
+    };
+  }
+}
+
+// ✅ Good - Server Action for delete
+// features/users/server-actions/delete-user.action.ts
+("use server");
+
+import { revalidateTag, revalidatePath } from "next/cache";
+import { UserService } from "../services/user.service";
+import type { ActionResponse } from "@/shared/types/api.types";
+
+export async function deleteUserAction(id: string): Promise<ActionResponse> {
+  try {
+    await UserService.delete(id);
+
+    revalidateTag("users");
+    revalidatePath("/users");
+
+    return { success: true, message: "User deleted successfully" };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete user",
+    };
+  }
+}
+```
+
+### 7. Client Components with Server Actions
+
+- Use `useTransition` for pending states
+- Use `useActionState` for form state management
+- Handle optimistic updates with `useOptimistic`
+
+```typescript
+// ✅ Good - Client Component with Server Action
+// features/users/components/create-user-form/create-user-form.tsx
+"use client";
+
+import { useTransition } from "react";
+import { createUserAction } from "../../server-actions";
+import { toast } from "sonner";
+
+export function CreateUserForm() {
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      const result = await createUserAction({
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+      });
+
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(result.message);
+    });
+  };
+
+  return (
+    <form action={handleSubmit}>
+      <input name="name" required disabled={isPending} />
+      <input name="email" type="email" required disabled={isPending} />
+      <button type="submit" disabled={isPending}>
+        {isPending ? "Creating..." : "Create User"}
+      </button>
+    </form>
+  );
+}
+
+// ✅ Good - Using useActionState for form validation feedback
+// features/users/components/user-form/user-form.tsx
+("use client");
+
+import { useActionState } from "react";
+import { createUserAction } from "../../server-actions";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+
+const initialState = {
+  success: false,
+  error: undefined,
+  details: undefined,
+};
+
+export function UserForm() {
+  const [state, formAction, isPending] = useActionState(
+    async (_prevState: typeof initialState, formData: FormData) => {
+      return createUserAction({
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+      });
+    },
+    initialState
+  );
+
+  return (
+    <form action={formAction} className="space-y-4">
+      <div>
+        <Input name="name" placeholder="Name" required disabled={isPending} />
+        {state.details?.name && (
+          <p className="text-sm text-destructive">{state.details.name[0]}</p>
+        )}
+      </div>
+
+      <div>
+        <Input
+          name="email"
+          type="email"
+          placeholder="Email"
+          required
+          disabled={isPending}
+        />
+        {state.details?.email && (
+          <p className="text-sm text-destructive">{state.details.email[0]}</p>
+        )}
+      </div>
+
+      {state.error && !state.details && (
+        <p className="text-sm text-destructive">{state.error}</p>
+      )}
+
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "Saving..." : "Save User"}
+      </Button>
+    </form>
+  );
+}
+
+// ✅ Good - Optimistic updates
+// features/users/components/user-list/user-list.tsx
+("use client");
+
+import { useOptimistic, useTransition } from "react";
+import { deleteUserAction } from "../../server-actions";
+import type { User } from "../../types";
+
+interface UserListProps {
+  users: User[];
+}
+
+export function UserList({ users }: UserListProps) {
+  const [isPending, startTransition] = useTransition();
+  const [optimisticUsers, removeOptimisticUser] = useOptimistic(
+    users,
+    (state, deletedId: string) => state.filter((user) => user.id !== deletedId)
+  );
+
+  const handleDelete = (id: string) => {
+    startTransition(async () => {
+      removeOptimisticUser(id);
+      await deleteUserAction(id);
+    });
+  };
+
+  return (
+    <ul>
+      {optimisticUsers.map((user) => (
+        <li key={user.id}>
+          {user.name}
+          <button onClick={() => handleDelete(user.id)} disabled={isPending}>
+            Delete
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 8. API Types & Response Handling
+
+- Define consistent API response types
+- Use generics for reusable type patterns
+- Handle pagination consistently
+
+```typescript
+// ✅ Good - Shared API Types
+// shared/types/api.types.ts
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+export interface ActionResponse<T = void> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+  details?: Record<string, string[]>;
+}
+
+export interface QueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  [key: string]: unknown;
+}
+
+// ✅ Good - API Error Class
+// shared/lib/api-error.ts
+export interface ApiErrorOptions {
+  message: string;
+  statusCode: number;
+  code?: string;
+  details?: Record<string, string[]>;
+}
+
+export class ApiError extends Error {
+  public readonly statusCode: number;
+  public readonly code: string;
+  public readonly details?: Record<string, string[]>;
+
+  constructor(options: ApiErrorOptions) {
+    super(options.message);
+
+    this.name = "ApiError";
+    this.statusCode = options.statusCode;
+    this.code = options.code || "UNKNOWN_ERROR";
+    this.details = options.details;
+  }
+
+  isNotFound(): boolean {
+    return this.statusCode === 404;
+  }
+
+  isUnauthorized(): boolean {
+    return this.statusCode === 401;
+  }
+
+  isForbidden(): boolean {
+    return this.statusCode === 403;
+  }
+
+  isValidationError(): boolean {
+    return this.statusCode === 422;
+  }
+
+  isBadRequest(): boolean {
+    return this.statusCode === 400;
+  }
+
+  isServerError(): boolean {
+    return this.statusCode >= 500;
+  }
+}
+```
+
+### 9. Feature Organization & Form Schemas
+
+- Each feature has its own `index.ts` exporting public API
+- Services are organized per feature
+- Server actions are separated from client-side code
+- Form schemas (zod) are co-located with form components
+- Types are co-located with their consumers
+
+```typescript
+// features/users/index.ts
+export { UserList } from "./components/user-list";
+export { UserForm } from "./components/user-form";
+export { UserService, getUsers, getUser } from "./services/user.service";
+export {
+  createUserAction,
+  updateUserAction,
+  deleteUserAction,
+} from "./server-actions";
+export type { User, CreateUserDTO, UpdateUserDTO } from "./types";
+// DO NOT export internal nested components
+
+// features/users/schemas/user.schema.ts
+import { z } from "zod";
+
+export const createUserSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["admin", "user", "guest"]).default("user"),
+});
+
+export const updateUserSchema = createUserSchema.partial();
+
+export type CreateUserDTO = z.infer<typeof createUserSchema>;
+export type UpdateUserDTO = z.infer<typeof updateUserSchema>;
+
+// features/users/types/index.ts
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  role: "admin" | "user" | "guest";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type { CreateUserDTO, UpdateUserDTO } from "../schemas/user.schema";
+```
+
+## Import Rules
+
+### 1. Import Order
+
+1. External libraries (React, Next.js, etc.)
+2. Internal absolute imports (@/shared, @/features)
+3. Services and server actions
+4. Relative imports (./components, ../utils)
+5. Type-only imports last
+
+```typescript
+// ✅ Good
+import React from "react";
+import { revalidateTag } from "next/cache";
+import { Button } from "@/shared/components/ui";
+import { UserService } from "../services/user.service";
+import { createUserAction } from "../server-actions";
+import { Toolbar } from "./components/toolbar";
+import type { UserListProps } from "./types";
+```
+
+### 2. Absolute Paths
+
+- Use `@/` for src root
+- Use `@/shared` for shared utilities
+- Use `@/features` for cross-feature imports (avoid when possible)
+
+## REST API Best Practices
+
+### 1. Endpoint Organization
+
+```typescript
+// ✅ Good - Organized endpoints
+// features/users/api/endpoints.ts
+export const USER_ENDPOINTS = {
+  BASE: "/api/users",
+  BY_ID: (id: string) => `/api/users/${id}`,
+  BY_EMAIL: (email: string) => `/api/users/by-email/${email}`,
+  AVATAR: (id: string) => `/api/users/${id}/avatar`,
+  CHANGE_PASSWORD: (id: string) => `/api/users/${id}/change-password`,
+} as const;
+```
+
+### 2. Error Handling in Server Actions
+
+```typescript
+// ✅ Good - Consistent error handling
+"use server";
+
+import { z } from "zod";
+import { ApiError } from "@/shared/lib/api-error";
+
+export async function someAction(data: unknown): Promise<ActionResponse> {
+  try {
+    // Validate
+    const validated = schema.parse(data);
+
+    // Execute
+    const result = await service.execute(validated);
+
+    // Revalidate
+    revalidateTag("resource");
+
+    return { success: true, data: result };
+  } catch (error) {
+    // Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        details: error.flatten().fieldErrors,
+      };
+    }
+
+    // Handle API errors
+    if (error instanceof ApiError) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    // Handle unknown errors
+    return {
+      success: false,
+      error: "An unexpected error occurred",
+    };
+  }
+}
+```
+
+### 3. Cache Revalidation Patterns
+
+```typescript
+// ✅ Good - Proper cache revalidation
+"use server";
+
+import { revalidateTag, revalidatePath } from "next/cache";
+
+// After creating a resource
+revalidateTag("users"); // Revalidate list
+revalidatePath("/users"); // Revalidate page
+
+// After updating a resource
+revalidateTag("users"); // Revalidate list
+revalidateTag(`user-${id}`); // Revalidate specific item
+revalidatePath(`/users/${id}`); // Revalidate detail page
+
+// After deleting a resource
+revalidateTag("users"); // Revalidate list
+revalidatePath("/users"); // Revalidate list page
+```
+
+## Anti-patterns to Avoid
+
+### ❌ Avoid
+
+- Direct fetch calls in components without service layer
+- Flat component structure without nesting
+- Server actions mixed with client-side code
+- Missing error handling in server actions
+- Not using cache tags for revalidation
+- **Using React Hook Form when server actions are sufficient**
+- **Missing form validation schemas**
+- **Not co-locating form schemas with components**
+
+```typescript
+// ❌ Bad - Direct API call in client component
+"use client";
+const UserList = () => {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then(setUsers);
+  }, []);
+};
+
+// ✅ Good - Server Component with service
+// app/users/page.tsx
+import { getUsers } from "@/features/users/services/user.service";
+
+export default async function UsersPage() {
+  const { data: users } = await getUsers();
+  return <UserList users={users} />;
+}
+
+// ❌ Bad - Flat structure
+// components/
+//   ├── user-list.tsx
+//   ├── toolbar.tsx
+//   ├── search-input.tsx
+//   └── filter-dropdown.tsx
+
+// ❌ Bad - Using React Hook Form unnecessarily
+const SimpleForm = () => {
+  const form = useForm(); // Overkill for simple forms
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <input name="name" />
+        <button type="submit">Submit</button>
+      </form>
+    </Form>
+  );
+};
+
+// ✅ Better - Server action approach
+const SimpleForm = () => {
+  return (
+    <form action={createUserAction}>
+      <input name="name" required />
+      <button type="submit">Submit</button>
+    </form>
+  );
+};
+
+// ❌ Bad - Server action without proper error handling
+("use server");
+export async function badAction(data: unknown) {
+  const user = await UserService.create(data); // No validation, no error handling
+  return user;
+}
+```
+
+## Performance Optimizations
+
+### 1. Server-Side Optimizations
+
+- Leverage Next.js fetch caching with proper tags
+- Use `revalidate` option for time-based cache
+- Implement parallel data fetching where possible
+- Use `loading.tsx` for streaming
+
+### 2. Component Optimizations
+
+- Use React.memo for pure components
+- Implement proper key props for lists
+- Use Suspense boundaries for loading states
+- Lazy load heavy nested components
+
+```typescript
+// ✅ Good - Parallel data fetching
+// app/dashboard/page.tsx
+export default async function DashboardPage() {
+  // Parallel fetching
+  const [users, stats, activities] = await Promise.all([
+    getUsers(),
+    getStats(),
+    getActivities(),
+  ]);
+
+  return <Dashboard users={users} stats={stats} activities={activities} />;
+}
+
+// ✅ Good - Streaming with Suspense
+// app/users/page.tsx
+import { Suspense } from "react";
+import { UserListSkeleton } from "@/features/users/components/user-list-skeleton";
+
+export default function UsersPage() {
+  return (
+    <Suspense fallback={<UserListSkeleton />}>
+      <UserListServer />
+    </Suspense>
+  );
+}
+
+async function UserListServer() {
+  const { data: users } = await getUsers();
+  return <UserList users={users} />;
+}
+```
+
+## When to Use React Hook Form vs Server Actions
+
+### ✅ Use Server Actions When:
+
+- Simple forms with basic validation
+- Standard CRUD operations
+- Forms that don't need real-time client-side validation
+- One-step submission flows
+- Forms without complex conditional logic
+
+### ✅ Use React Hook Form + shadcn/ui When:
+
+- **Real-time validation** is required (showing errors as user types)
+- **Multi-step forms** with complex local state management
+- **Dynamic form fields** based on user interactions
+- **File uploads** with preview functionality
+- **Complex conditional validation** based on multiple fields
+- **Form arrays** (adding/removing dynamic items)
+- **Rich text editors** or custom form controls
+- **Form state persistence** across navigation
+
+### Form Decision Tree:
+
+```
+Is the form simple with basic validation?
+├── Yes → Use Server Actions with useActionState
+└── No → Does it need real-time validation or complex interactions?
+    ├── Yes → Use React Hook Form + shadcn/ui
+    └── No → Prefer Server Actions, consider if complexity is necessary
+```
+
+## Useful Commands
+
+```bash
+# Create new feature with nested structure
+mkdir -p src/features/{feature-name}/{components,hooks,services,api,server-actions,types,schemas,utils}
+
+# Create component with nested structure
+mkdir -p src/features/{feature}/components/{component}/{components,hooks,schemas}
+touch src/features/{feature}/components/{component}/index.ts
+
+# Install dependencies
+yarn add zod
+yarn add react-hook-form @hookform/resolvers  # Only if needed
+
+# Check circular dependencies
+npx madge --circular src/
+```
+
+---
+
+**Remember**: Features over layers, nested components for complex UIs, service layer for API communication, Next.js fetch for server caching, **server actions first, React Hook Form only when necessary**, form schemas co-located with components!
