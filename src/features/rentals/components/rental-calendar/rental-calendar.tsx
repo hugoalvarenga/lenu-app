@@ -20,6 +20,7 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "./rental-calendar.css";
 import {
   Plus,
   ChevronLeft,
@@ -140,24 +141,25 @@ export function RentalCalendar({
   }, [rentals]);
 
   const eventStyleGetter = useCallback((event: CalendarEvent) => {
-    let backgroundColor = "hsl(var(--primary))";
+    let backgroundColor = "#0ea5e9";
 
     if (event.rental.status === "returned") {
-      backgroundColor = "hsl(142.1 76.2% 36.3%)";
+      backgroundColor = "#22c55e";
     } else if (event.isOverdue) {
-      backgroundColor = "hsl(0 84.2% 60.2%)";
+      backgroundColor = "#ef4444";
     }
 
     return {
       style: {
         backgroundColor,
         borderRadius: "4px",
-        opacity: 0.9,
-        color: "white",
+        color: "#ffffff",
         border: "none",
         display: "block",
         fontSize: "11px",
-        padding: "2px 6px",
+        padding: "3px 8px",
+        fontWeight: 500,
+        boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
       },
     };
   }, []);
@@ -277,29 +279,7 @@ export function RentalCalendar({
               </div>
             </div>
 
-            <div
-              className={cn(
-                "p-4",
-                "[&_.rbc-toolbar]:hidden",
-                "[&_.rbc-header]:border-border/50 [&_.rbc-header]:py-3 [&_.rbc-header]:text-xs [&_.rbc-header]:font-medium [&_.rbc-header]:uppercase [&_.rbc-header]:tracking-wide [&_.rbc-header]:text-muted-foreground",
-                "[&_.rbc-month-view]:border-border/50 [&_.rbc-month-view]:rounded-lg [&_.rbc-month-view]:overflow-hidden",
-                "[&_.rbc-month-row]:border-border/50",
-                "[&_.rbc-day-bg]:border-border/50",
-                "[&_.rbc-off-range-bg]:bg-muted/20",
-                "[&_.rbc-today]:bg-primary/5",
-                "[&_.rbc-date-cell]:p-2 [&_.rbc-date-cell]:text-sm",
-                "[&_.rbc-date-cell.rbc-now]:font-semibold [&_.rbc-date-cell.rbc-now]:text-primary",
-                "[&_.rbc-event]:text-xs [&_.rbc-event]:shadow-sm",
-                "[&_.rbc-show-more]:text-xs [&_.rbc-show-more]:text-primary [&_.rbc-show-more]:font-medium [&_.rbc-show-more]:mt-1",
-                "[&_.rbc-time-view]:border-border/50 [&_.rbc-time-view]:rounded-lg [&_.rbc-time-view]:overflow-hidden",
-                "[&_.rbc-time-header]:border-border/50",
-                "[&_.rbc-time-content]:border-border/50",
-                "[&_.rbc-timeslot-group]:border-border/50",
-                "[&_.rbc-time-slot]:border-border/50",
-                "[&_.rbc-day-slot_.rbc-time-slot]:border-border/30",
-                "[&_.rbc-current-time-indicator]:bg-primary"
-              )}
-            >
+            <div className="rental-calendar p-4">
               <BigCalendar
                 localizer={localizer}
                 events={events}
@@ -316,20 +296,21 @@ export function RentalCalendar({
                 eventPropGetter={eventStyleGetter}
                 popup
                 selectable={false}
+                toolbar={false}
               />
             </div>
 
             <div className="flex items-center gap-6 border-t border-border/50 px-4 py-3">
               <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-sm bg-primary" />
+                <div className="h-3 w-3 rounded" style={{ backgroundColor: "#0ea5e9" }} />
                 <span className="text-xs text-muted-foreground">Ativo</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
+                <div className="h-3 w-3 rounded" style={{ backgroundColor: "#22c55e" }} />
                 <span className="text-xs text-muted-foreground">Devolvido</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-sm bg-red-500" />
+                <div className="h-3 w-3 rounded" style={{ backgroundColor: "#ef4444" }} />
                 <span className="text-xs text-muted-foreground">Atrasado</span>
               </div>
             </div>
