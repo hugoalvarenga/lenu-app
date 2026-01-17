@@ -16,6 +16,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Lenu - Gerenciamento de Livros",
   description: "Sistema de gerenciamento de aluguel e catalogação de livros",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({
